@@ -5,6 +5,8 @@ import (
 	"log"
 
 	"boiler/config"
+	"boiler/internal/database/migrations"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -12,7 +14,7 @@ import (
 // DB is the database connection
 var DB *gorm.DB
 
-// Init initializes the database connection
+// Init initializes the database connection and runs migrations
 func Init(cfg config.DBConfig) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
 		cfg.Host, cfg.User, cfg.Password, cfg.DBName, cfg.Port)
@@ -24,4 +26,11 @@ func Init(cfg config.DBConfig) {
 	}
 
 	log.Println("Database connected")
+
+	// Run migrations
+	log.Println("Running database migrations...")
+	if err := migrations.RunMigrations(DB); err != nil {
+		log.Fatalf("failed to run migrations: %v", err)
+	}
+	log.Println("Migrations completed successfully")
 }
