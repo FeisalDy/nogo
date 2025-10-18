@@ -1,24 +1,19 @@
 package migrations
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 )
 
 // User model for migration 001
 type User struct {
-	ID        uint `gorm:"primaryKey"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `gorm:"index"`
+	gorm.Model
 
-	// Basic user fields - keep it simple for now
-	Name     string `json:"name" gorm:"not null"`
-	Email    string `json:"email" gorm:"unique;not null"`
-	Password string `json:"-" gorm:"not null"`        // Hidden from JSON
-	Role     string `json:"role" gorm:"default:user"` // user, admin, author
-	IsActive bool   `json:"is_active" gorm:"default:true"`
+	UserName  *string `json:"user_name"`
+	Email     string  `json:"email" gorm:"unique;not null"`
+	Password  *string `json:"-"`
+	AvatarURL *string `json:"avatar_url"`
+	Bio       *string `json:"bio" gorm:"type:text"`
+	Status    string  `json:"status" gorm:"default:'active';index"`
 }
 
 // Migration001CreateUsers creates the users table

@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -25,13 +26,12 @@ type MigrationHistory struct {
 func GetAllMigrations() []Migration {
 	return []Migration{
 		Migration001CreateUsers(),
-		// Phase 1: Uncomment when ready for Content Management
-		// Migration002CreateNovels(),
-		// Migration003CreateChapters(),
-
-		// Phase 2: Uncomment when ready for Genre System
-		// Migration004CreateGenres(),
-		// Migration005AddNovelGenres(),
+		Migration002CreateAuthTable(),
+		Migration003CreateMedia(),
+		Migration004CreateNovels(),
+		Migration005CreateChapters(),
+		Migration006CreateGenresAndTags(),
+		Migration007AddNovelGenresAndTags(),
 	}
 }
 
@@ -64,7 +64,7 @@ func RunMigrations(db *gorm.DB) error {
 		// Record migration as applied
 		history := MigrationHistory{
 			MigrationID: migration.ID,
-			AppliedAt:   int64(1729123200), // Current timestamp
+			AppliedAt:   time.Now().Unix(), // Current timestamp
 		}
 		if err := db.Create(&history).Error; err != nil {
 			return fmt.Errorf("failed to record migration %s: %v", migration.ID, err)
