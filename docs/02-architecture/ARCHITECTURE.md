@@ -65,7 +65,7 @@ Dependencies flow **inward** toward the business logic:
 ## Project Structure
 
 ```
-boiler/
+github.com/FeisalDy/nogo/
 ├── cmd/
 │   └── server/
 │       └── main.go                 # Application entry point

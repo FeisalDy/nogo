@@ -266,7 +266,7 @@ package model
 import (
     "time"
     "gorm.io/gorm"
-    userModel "boiler/internal/user/model"
+    userModel "github.com/FeisalDy/nogo/internal/user/model"
 )
 
 type Novel struct {
@@ -294,8 +294,8 @@ type Novel struct {
 package repository
 
 import (
-    "boiler/internal/database"
-    "boiler/internal/novel/model"
+    "github.com/FeisalDy/nogo/internal/database"
+    "github.com/FeisalDy/nogo/internal/novel/model"
 )
 
 type NovelRepository struct{}
@@ -529,8 +529,8 @@ type NewDomain struct {
 package repository
 
 import (
-    "boiler/internal/database"
-    "boiler/internal/newdomain/model"
+    "github.com/FeisalDy/nogo/internal/database"
+    "github.com/FeisalDy/nogo/internal/newdomain/model"
 )
 
 type NewDomainRepository struct{}
@@ -595,9 +595,9 @@ package service
 
 import (
     "fmt"
-    "boiler/internal/newdomain/model"
-    "boiler/internal/newdomain/repository"
-    "boiler/internal/newdomain/dto"
+    "github.com/FeisalDy/nogo/internal/newdomain/model"
+    "github.com/FeisalDy/nogo/internal/newdomain/repository"
+    "github.com/FeisalDy/nogo/internal/newdomain/dto"
 )
 
 type NewDomainService struct {
@@ -660,8 +660,8 @@ import (
     "strconv"
     
     "github.com/gin-gonic/gin"
-    "boiler/internal/newdomain/service"
-    "boiler/internal/newdomain/dto"
+    "github.com/FeisalDy/nogo/internal/newdomain/service"
+    "github.com/FeisalDy/nogo/internal/newdomain/dto"
 )
 
 type NewDomainHandler struct {
@@ -752,9 +752,9 @@ package newdomain
 
 import (
     "github.com/gin-gonic/gin"
-    "boiler/internal/newdomain/handler"
-    "boiler/internal/newdomain/repository"
-    "boiler/internal/newdomain/service"
+    "github.com/FeisalDy/nogo/internal/newdomain/handler"
+    "github.com/FeisalDy/nogo/internal/newdomain/repository"
+    "github.com/FeisalDy/nogo/internal/newdomain/service"
 )
 
 func SetupRoutes(router *gin.RouterGroup) {
@@ -781,7 +781,7 @@ Update `cmd/server/main.go` or router:
 ```go
 import (
     // ... other imports
-    "boiler/internal/newdomain"
+    "github.com/FeisalDy/nogo/internal/newdomain"
 )
 
 func main() {
@@ -978,8 +978,8 @@ package seeds
 import (
     "log"
     "gorm.io/gorm"
-    userModel "boiler/internal/user/model"
-    novelModel "boiler/internal/novel/model"
+    userModel "github.com/FeisalDy/nogo/internal/user/model"
+    novelModel "github.com/FeisalDy/nogo/internal/novel/model"
 )
 
 func SeedDatabase(db *gorm.DB) error {
@@ -1076,7 +1076,7 @@ func seedNovels(db *gorm.DB) error {
 
 ```go
 // cmd/server/main.go or separate command
-import "boiler/internal/database/seeds"
+import "github.com/FeisalDy/nogo/internal/database/seeds"
 
 func main() {
     // After migrations
@@ -1134,7 +1134,7 @@ Error: listen tcp :8080: bind: address already in use
 
 #### Module Import Errors
 ```
-Error: package boiler/internal/user not found
+Error: package github.com/FeisalDy/nogo/internal/user not found
 ```
 **Solutions**:
 1. Run `go mod tidy`

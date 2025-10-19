@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"boiler/config"
-	"boiler/internal/database"
+	"github.com/FeisalDy/nogo/config"
+	"github.com/FeisalDy/nogo/internal/database"
 )
 
 func main() {

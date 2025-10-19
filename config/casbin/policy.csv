@@ -1,0 +1,14 @@
+# Initial policies - these will be managed through the API
+# Format: p, role, resource, action
+# Format: g, user_id, role_name
+
+# Example policies (will be dynamically added through API)
+# p, admin, users, read
+# p, admin, users, write
+# p, admin, users, delete
+# p, admin, roles, read
+# p, admin, roles, write
+# p, admin, roles, delete
+
+# Example role assignments (will be dynamically added through API)
+# g, user:1, admin

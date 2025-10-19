@@ -7,14 +7,19 @@ A production-ready Go REST API boilerplate built with the Gin framework, Postgre
 - 🏗️ **Clean Architecture** - Organized by domains with clear separation of concerns
 - 🚀 **Gin Framework** - Fast HTTP web framework
 - 🗄️ **PostgreSQL + GORM** - Robust database integration with ORM
-- 🔧 **Environment Configuration** - Easy setup with environment variables
+- � **JWT Authentication** - Secure token-based authentication with bcrypt password hashing
+- 🛡️ **Auth Middleware** - Protected routes with automatic token validation
+- �🔧 **Environment Configuration** - Easy setup with environment variables
 - 🐳 **Docker Support** - Containerized deployment ready
 - 🔥 **Hot Reloading** - Development server with Air
+- ⚠️ **Advanced Error Handling** - Structured errors with unique codes and readable messages
+- ✅ **Validation Error Formatting** - Beautiful, user-friendly validation error responses
 - 📚 **Comprehensive Documentation** - Architecture, API, and development guides
 
 ## Quick Start
 
 1. **Clone and Setup**
+
    ```bash
    git clone <repository-url>
    cd boiler
@@ -22,16 +27,18 @@ A production-ready Go REST API boilerplate built with the Gin framework, Postgre
    ```
 
 2. **Configure Environment**
+
    ```bash
    cp .env.example .env
    # Edit .env with your database credentials
    ```
 
 3. **Run with Hot Reloading**
+
    ```bash
    # Install Air (if not already installed)
    go install github.com/cosmtrek/air@latest
-   
+
    # Start development server
    air
    ```
@@ -47,11 +54,16 @@ A production-ready Go REST API boilerplate built with the Gin framework, Postgre
 - 📖 **[Architecture Guide](docs/ARCHITECTURE.md)** - Detailed explanation of the application structure and flow
 - 🔗 **[API Documentation](docs/API.md)** - Complete API endpoint reference
 - 👨‍💻 **[Development Guide](docs/DEVELOPMENT.md)** - Setup instructions and coding standards
+- 🔐 **[Authentication Guide](docs/AUTHENTICATION.md)** - JWT authentication and password hashing
+- 🧪 **[Authentication Testing](docs/AUTH_TESTING.md)** - Testing guide for auth endpoints
+- ⚠️ **[Error Handling Guide](docs/ERROR_HANDLING.md)** - Complete error handling system documentation
+- ⚡ **[Error Handling Quick Reference](docs/ERROR_HANDLING_QUICK_REFERENCE.md)** - Quick copy-paste examples
+- 🧪 **[Error Handling Tests](docs/ERROR_HANDLING_TESTS.md)** - Testing guide for error responses
 
 ## Project Structure
 
 ```
-boiler/
+github.com/FeisalDy/nogo/
 ├── cmd/server/           # Application entry point
 ├── config/              # Configuration management
 ├── docs/                # Documentation files
@@ -73,13 +85,132 @@ boiler/
 ## API Endpoints
 
 ### Health Check
+
 - `GET /ping` - API health check
 
 ### User Management
-- `POST /users` - Create a new user
-- `GET /users/:id` - Get user by ID
+
+- `POST /api/users/register` - Register a new user (returns JWT token)
+- `POST /api/users/login` - Login user (returns JWT token)
+- `GET /api/users/me` - Get current authenticated user (requires token)
+- `GET /api/users/:id` - Get user by ID (requires token)
 
 For detailed API documentation, see [API.md](docs/API.md).
+
+## Authentication
+
+The application features JWT-based authentication with secure password hashing:
+
+### Register a New User
+
+```bash
+curl -X POST http://localhost:8080/api/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john_doe",
+    "email": "john@example.com",
+    "password": "securepass123",
+    "confirm_password": "securepass123"
+  }'
+```
+
+Response includes JWT token:
+
+```json
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id": 1,
+      "username": "john_doe",
+      "email": "john@example.com",
+      "status": "active"
+    }
+  },
+  "message": "Registration successful"
+}
+```
+
+### Login
+
+```bash
+curl -X POST http://localhost:8080/api/users/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john@example.com",
+    "password": "securepass123"
+  }'
+```
+
+### Access Protected Routes
+
+```bash
+curl -X GET http://localhost:8080/api/users/me \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+**Security Features:**
+
+- Passwords hashed with bcrypt
+- JWT tokens with 24-hour expiration
+- Protected routes via middleware
+- Validation on all inputs
+
+For detailed authentication documentation, see:
+
+- [Authentication Guide](docs/AUTHENTICATION.md) - Complete authentication system
+- [Authentication Testing](docs/AUTH_TESTING.md) - Testing examples and scenarios
+
+## Error Handling
+
+The application features a comprehensive error handling system with:
+
+- **Unique error codes** per domain (USER, AUTH, NOVEL, CHAPTER, etc.)
+- **Human-readable error messages** with automatic validation error formatting
+- **Standardized API responses** for both success and error cases
+- **Automatic HTTP status code mapping** based on error type
+
+### Example Error Response
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER007",
+    "message": "Validation failed",
+    "details": {
+      "fields": [
+        {
+          "field": "email",
+          "message": "email must be a valid email address",
+          "tag": "email",
+          "value": "invalid-email"
+        }
+      ]
+    }
+  }
+}
+```
+
+### Example Success Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "123",
+    "username": "john_doe"
+  },
+  "message": "User created successfully"
+}
+```
+
+For detailed documentation, see:
+
+- [Error Handling Guide](docs/ERROR_HANDLING.md) - Complete documentation
+- [Quick Reference](docs/ERROR_HANDLING_QUICK_REFERENCE.md) - Copy-paste examples
+- [Testing Guide](docs/ERROR_HANDLING_TESTS.md) - How to test error responses
 
 ## Development
 
@@ -96,6 +227,7 @@ See the [Development Guide](docs/DEVELOPMENT.md) for detailed setup instructions
 ### Environment Variables
 
 Create a `.env` file:
+
 ```env
 DB_HOST=localhost
 DB_PORT=5432
@@ -111,7 +243,8 @@ PORT=8080
 
 To build the application, run the following command:
 go build -o my-app cmd/server/main.go
-```
+
+````
 This will create a binary file named `my-app` in the root directory.
 
 ### Deployment
@@ -119,7 +252,7 @@ This will create a binary file named `my-app` in the root directory.
 To deploy the application, you can simply run the binary file:
 ```bash
 ./my-app
-```
+````
 
 You can also use a process manager like `systemd` or `supervisor` to run the application in the background.
 

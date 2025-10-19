@@ -1,8 +1,8 @@
 package common
 
 import (
-	"boiler/internal/common/handler"
-	"boiler/internal/common/service"
+	"github.com/FeisalDy/nogo/internal/common/handler"
+	"github.com/FeisalDy/nogo/internal/common/service"
 
 	"github.com/gin-gonic/gin"
 )

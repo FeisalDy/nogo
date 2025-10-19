@@ -32,6 +32,7 @@ func GetAllMigrations() []Migration {
 		Migration005CreateChapters(),
 		Migration006CreateGenresAndTags(),
 		Migration007AddNovelGenresAndTags(),
+		Migration008SeedRoles(),
 	}
 }
 

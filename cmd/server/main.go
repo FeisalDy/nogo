@@ -2,10 +2,12 @@ package main
 
 import (
 	"log"
+	"path/filepath"
 
-	"boiler/config"
-	"boiler/internal/database"
-	"boiler/internal/router"
+	"github.com/FeisalDy/nogo/config"
+	casbinService "github.com/FeisalDy/nogo/internal/common/casbin"
+	"github.com/FeisalDy/nogo/internal/database"
+	"github.com/FeisalDy/nogo/internal/router"
 )
 
 func main() {
@@ -14,7 +16,18 @@ func main() {
 		log.Fatalf("Failed to initialize application: %v", err)
 	}
 	database.Init(cfg.DB)
-	r := router.SetupRoutes(cfg.App)
+
+	modelPath := filepath.Join("config", "casbin", "model.conf")
+	_, err := casbinService.InitCasbin(database.DB, modelPath)
+	if err != nil {
+		log.Fatalf("Failed to initialize Casbin: %v", err)
+	}
+	log.Println("Casbin initialized successfully")
+
+	// Auto-seed Casbin permissions (runs after Casbin is initialized)
+	database.SeedCasbin()
+
+	r := router.SetupRoutes(database.DB, cfg.App)
 
 	serverAddr := ":" + cfg.App.Port
 	log.Printf("Starting server on %s", serverAddr)

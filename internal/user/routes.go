@@ -1,27 +1,40 @@
 package user
 
 import (
-	"boiler/internal/user/handler"
-	"boiler/internal/user/repository"
-	"boiler/internal/user/service"
+	casbinService "github.com/FeisalDy/nogo/internal/common/casbin"
+	"github.com/FeisalDy/nogo/internal/common/middleware"
+	roleRepo "github.com/FeisalDy/nogo/internal/role/repository"
+	"github.com/FeisalDy/nogo/internal/user/handler"
+	"github.com/FeisalDy/nogo/internal/user/repository"
+	"github.com/FeisalDy/nogo/internal/user/service"
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes registers all user-related routes
-func RegisterRoutes(router *gin.RouterGroup) {
+func RegisterRoutes(db *gorm.DB, router *gin.RouterGroup) {
 	// Initialize user domain dependencies
-	userRepository := repository.NewUserRepository()
-	userService := service.NewUserService(userRepository)
+	userRepository := repository.NewUserRepository(db)
+	roleRepository := roleRepo.NewRoleRepository(db)
+	casbinSvc := casbinService.NewCasbinService(db)
+	userService := service.NewUserService(userRepository, roleRepository, casbinSvc)
 	userHandler := handler.NewUserHandler(userService)
 
-	// Register user routes
-	router.POST("/", userHandler.CreateUser)
-	router.GET("/:id", userHandler.GetUser)
+	// Public routes (no authentication required)
+	router.POST("/register", userHandler.Register)
+	router.POST("/login", userHandler.Login)
 
-	// Add more user routes here as needed:
-	// router.PUT("/:id", userHandler.UpdateUser)
-	// router.DELETE("/:id", userHandler.DeleteUser)
-	// router.GET("/", userHandler.GetAllUsers)
-	// router.POST("/:id/avatar", userHandler.UploadAvatar)
+	// Protected routes (authentication required)
+	protected := router.Group("/")
+	protected.GET("/:email", userHandler.GetUserByEmail)
+
+	protected.Use(middleware.AuthMiddleware())
+	{
+		protected.GET("/me", userHandler.GetMe)
+		// Add more protected routes here:
+		// protected.PUT("/:id", userHandler.UpdateUser)
+		// protected.DELETE("/:id", userHandler.DeleteUser)
+		// protected.POST("/:id/avatar", userHandler.UploadAvatar)
+	}
 }

@@ -3,47 +3,149 @@ package handler
 import (
 	"net/http"
 
-	"boiler/internal/user/model"
-	"boiler/internal/user/service"
-
+	"github.com/FeisalDy/nogo/internal/common/errors"
+	"github.com/FeisalDy/nogo/internal/common/utils"
+	"github.com/FeisalDy/nogo/internal/user/dto"
+	"github.com/FeisalDy/nogo/internal/user/service"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
-// UserHandler handles user-related requests
 type UserHandler struct {
-	UserService *service.UserService
+	userService *service.UserService
+	validator   *validator.Validate
 }
 
-// NewUserHandler creates a new UserHandler
 func NewUserHandler(userService *service.UserService) *UserHandler {
-	return &UserHandler{UserService: userService}
+	return &UserHandler{userService: userService, validator: validator.New()}
 }
 
-// CreateUser creates a new user
-func (h *UserHandler) CreateUser(c *gin.Context) {
-	var user model.User
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+func (h *UserHandler) Register(c *gin.Context) {
+	var registerDTO dto.RegisterUserDTO
+	if err := c.ShouldBindJSON(&registerDTO); err != nil {
+		utils.RespondValidationError(c, err, errors.ErrCodeUserValidation)
 		return
 	}
 
-	if err := h.UserService.CreateUser(&user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if err := h.validator.Struct(registerDTO); err != nil {
+		utils.RespondValidationError(c, err, errors.ErrCodeUserValidation)
 		return
 	}
 
-	c.JSON(http.StatusCreated, user)
-}
+	if registerDTO.Password != registerDTO.ConfirmPassword {
+		utils.RespondWithAppError(c, errors.ErrAuthPasswordMismatch)
+		return
+	}
 
-// GetUser gets a user by id
-func (h *UserHandler) GetUser(c *gin.Context) {
-	id := c.Param("id")
-
-	user, err := h.UserService.GetUser(id)
+	user, err := h.userService.Register(&registerDTO)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		utils.HandleServiceError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	username := ""
+	if user.Username != nil {
+		username = *user.Username
+	}
+	token, err := utils.GenerateToken(user.ID, user.Email, username)
+	if err != nil {
+		utils.HandleServiceError(c, err)
+		return
+	}
+
+	response := dto.AuthResponseDTO{
+		Token: token,
+		User: dto.UserResponseDTO{
+			ID:        user.ID,
+			Username:  user.Username,
+			Email:     user.Email,
+			AvatarURL: user.AvatarURL,
+			Bio:       user.Bio,
+			Status:    user.Status,
+		},
+	}
+
+	utils.RespondSuccess(c, http.StatusCreated, response, "Registration successful")
+}
+
+func (h *UserHandler) Login(c *gin.Context) {
+	var loginDTO dto.LoginUserDTO
+	if err := c.ShouldBindJSON(&loginDTO); err != nil {
+		utils.RespondValidationError(c, err, errors.ErrCodeUserValidation)
+		return
+	}
+
+	if err := h.validator.Struct(loginDTO); err != nil {
+		utils.RespondValidationError(c, err, errors.ErrCodeUserValidation)
+		return
+	}
+
+	user, err := h.userService.Login(&loginDTO)
+	if err != nil {
+		utils.HandleServiceError(c, err)
+		return
+	}
+
+	username := ""
+	if user.Username != nil {
+		username = *user.Username
+	}
+	token, err := utils.GenerateToken(user.ID, user.Email, username)
+	if err != nil {
+		utils.HandleServiceError(c, err)
+		return
+	}
+
+	// Prepare response
+	response := dto.AuthResponseDTO{
+		Token: token,
+		User: dto.UserResponseDTO{
+			ID:        user.ID,
+			Username:  user.Username,
+			Email:     user.Email,
+			AvatarURL: user.AvatarURL,
+			Bio:       user.Bio,
+			Status:    user.Status,
+		},
+	}
+
+	utils.RespondSuccess(c, http.StatusOK, response, "Login successful")
+}
+
+func (h *UserHandler) GetMe(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		utils.RespondWithAppError(c, errors.ErrAuthUnauthorized)
+		return
+	}
+
+	id := userID.(uint)
+	userWithPermissions, err := h.userService.GetUserWithPermissions(id)
+	if err != nil {
+		utils.HandleServiceError(c, err)
+		return
+	}
+
+	utils.RespondSuccess(c, http.StatusOK, userWithPermissions, "User profile retrieved successfully")
+}
+
+func (h *UserHandler) GetUserByEmail(c *gin.Context) {
+	emailParam := c.Param("email")
+
+	user, err := h.userService.GetUserByEmail(emailParam)
+	if err != nil {
+		utils.HandleServiceError(c, err)
+		return
+	}
+
+	res := dto.UserResponseDTO{
+		ID:        user.ID,
+		Username:  user.Username,
+		Email:     user.Email,
+		AvatarURL: user.AvatarURL,
+		Bio:       user.Bio,
+		Status:    user.Status,
+	}
+
+	utils.RespondSuccess(c, http.StatusOK, res)
 }

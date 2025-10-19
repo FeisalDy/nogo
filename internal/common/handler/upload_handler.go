@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"boiler/internal/common/dto"
-	"boiler/internal/common/service"
+	"github.com/FeisalDy/nogo/internal/common/dto"
+	"github.com/FeisalDy/nogo/internal/common/service"
 
 	"github.com/gin-gonic/gin"
 )

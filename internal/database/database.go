@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"boiler/config"
-	"boiler/internal/database/migrations"
+	"github.com/FeisalDy/nogo/config"
+	"github.com/FeisalDy/nogo/internal/database/migrations"
+	"github.com/FeisalDy/nogo/internal/database/seeds"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -33,4 +34,12 @@ func Init(cfg config.DBConfig) {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
 	log.Println("Migrations completed successfully")
+}
+
+// SeedCasbin seeds Casbin permissions (called after Casbin is initialized)
+func SeedCasbin() {
+	log.Println("Running Casbin permission seeder...")
+	if err := seeds.SeedCasbinPolicies(DB); err != nil {
+		log.Printf("Warning: Failed to seed casbin policies: %v", err)
+	}
 }
