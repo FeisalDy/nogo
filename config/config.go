@@ -29,8 +29,8 @@ type AppConfig struct {
 
 // Config holds all configuration
 type Config struct {
-	App AppConfig
 	DB  DBConfig
+	App AppConfig
 }
 
 // LoadConfig loads all application configuration from environment variables

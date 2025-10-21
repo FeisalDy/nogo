@@ -5,18 +5,16 @@ import (
 	"github.com/FeisalDy/nogo/internal/role/handler"
 	"github.com/FeisalDy/nogo/internal/role/repository"
 	"github.com/FeisalDy/nogo/internal/role/service"
-	userRepo "github.com/FeisalDy/nogo/internal/user/repository"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 func RegisterRoutes(db *gorm.DB, router *gin.RouterGroup) {
 	roleRepository := repository.NewRoleRepository(db)
-	userRepository := userRepo.NewUserRepository(db)
-	roleService := service.NewRoleService(roleRepository, userRepository)
+	roleService := service.NewRoleService(roleRepository)
 	roleHandler := handler.NewRoleHandler(roleService)
 
-	roleRoutes := router.Group("/roles")
+	roleRoutes := router.Group("/")
 	roleRoutes.Use(middleware.AuthMiddleware())
 	{
 		// CRUD operations

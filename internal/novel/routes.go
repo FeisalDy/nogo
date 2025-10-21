@@ -1,28 +1,24 @@
 package novel
 
 import (
-	"net/http"
-
+	"github.com/FeisalDy/nogo/internal/novel/handler"
+	"github.com/FeisalDy/nogo/internal/novel/repository"
+	"github.com/FeisalDy/nogo/internal/novel/service"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-// RegisterRoutes registers all novel-related routes
-func RegisterRoutes(router *gin.RouterGroup) {
-	// Placeholder routes for novel domain
-	// You can implement these as you build the novel functionality
+func RegisterRoutes(db *gorm.DB, router *gin.RouterGroup) {
+	novelRepo := repository.NewNovelRepository(db)
+	novelSrvc := service.NewNovelService(novelRepo)
+	novelHandler := handler.NewNovelHandler(novelSrvc)
 
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Novel API endpoint",
-			"status":  "coming soon",
-		})
-	})
+	novelRoutes := router.Group("/")
+	{
+		// Single novel operations
+		novelRoutes.GET("/:id", novelHandler.GetNovelByID)
 
-	// Future novel routes:
-	// router.POST("/", novelHandler.CreateNovel)
-	// router.GET("/:id", novelHandler.GetNovel)
-	// router.PUT("/:id", novelHandler.UpdateNovel)
-	// router.DELETE("/:id", novelHandler.DeleteNovel)
-	// router.GET("/", novelHandler.GetAllNovels)
-	// router.GET("/:id/chapters", novelHandler.GetNovelChapters)
+		// Cursor-based pagination endpoints
+		novelRoutes.GET("", novelHandler.GetAllNovels) // GET /novels?cursor=...&limit=20
+	}
 }

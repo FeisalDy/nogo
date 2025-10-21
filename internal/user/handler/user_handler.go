@@ -20,53 +20,8 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 	return &UserHandler{userService: userService, validator: validator.New()}
 }
 
-func (h *UserHandler) Register(c *gin.Context) {
-	var registerDTO dto.RegisterUserDTO
-	if err := c.ShouldBindJSON(&registerDTO); err != nil {
-		utils.RespondValidationError(c, err, errors.ErrCodeUserValidation)
-		return
-	}
-
-	if err := h.validator.Struct(registerDTO); err != nil {
-		utils.RespondValidationError(c, err, errors.ErrCodeUserValidation)
-		return
-	}
-
-	if registerDTO.Password != registerDTO.ConfirmPassword {
-		utils.RespondWithAppError(c, errors.ErrAuthPasswordMismatch)
-		return
-	}
-
-	user, err := h.userService.Register(&registerDTO)
-	if err != nil {
-		utils.HandleServiceError(c, err)
-		return
-	}
-
-	username := ""
-	if user.Username != nil {
-		username = *user.Username
-	}
-	token, err := utils.GenerateToken(user.ID, user.Email, username)
-	if err != nil {
-		utils.HandleServiceError(c, err)
-		return
-	}
-
-	response := dto.AuthResponseDTO{
-		Token: token,
-		User: dto.UserResponseDTO{
-			ID:        user.ID,
-			Username:  user.Username,
-			Email:     user.Email,
-			AvatarURL: user.AvatarURL,
-			Bio:       user.Bio,
-			Status:    user.Status,
-		},
-	}
-
-	utils.RespondSuccess(c, http.StatusCreated, response, "Registration successful")
-}
+// Note: Register has been moved to the application layer (internal/application/handler/auth_handler.go)
+// This is because registration involves cross-domain operations (creating user + assigning role)
 
 func (h *UserHandler) Login(c *gin.Context) {
 	var loginDTO dto.LoginUserDTO
@@ -112,22 +67,9 @@ func (h *UserHandler) Login(c *gin.Context) {
 	utils.RespondSuccess(c, http.StatusOK, response, "Login successful")
 }
 
-func (h *UserHandler) GetMe(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		utils.RespondWithAppError(c, errors.ErrAuthUnauthorized)
-		return
-	}
-
-	id := userID.(uint)
-	userWithPermissions, err := h.userService.GetUserWithPermissions(id)
-	if err != nil {
-		utils.HandleServiceError(c, err)
-		return
-	}
-
-	utils.RespondSuccess(c, http.StatusOK, userWithPermissions, "User profile retrieved successfully")
-}
+// Note: GetMe has been moved to the application layer (internal/application/handler/user_profile_handler.go)
+// This is because it involves cross-domain operations (user + roles + permissions from Casbin)
+// New endpoint: GET /api/v1/profile/me
 
 func (h *UserHandler) GetUserByEmail(c *gin.Context) {
 	emailParam := c.Param("email")

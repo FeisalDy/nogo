@@ -23,7 +23,7 @@ type ErrorResponse struct {
 }
 
 // RespondSuccess sends a success response
-func RespondSuccess(c *gin.Context, statusCode int, data interface{}, message ...string) {
+func RespondSuccess(c *gin.Context, statusCode int, data any, message ...string) {
 	msg := ""
 	if len(message) > 0 {
 		msg = message[0]
@@ -33,6 +33,17 @@ func RespondSuccess(c *gin.Context, statusCode int, data interface{}, message ..
 		Success: true,
 		Data:    data,
 		Message: msg,
+	})
+}
+
+// RespondSuccessWithPagination sends a paginated success response
+// This avoids nested data structure (data.data) by embedding pagination fields at root level
+func RespondSuccessWithPagination(c *gin.Context, statusCode int, items any, pageInfo any, metadata any) {
+	c.JSON(statusCode, gin.H{
+		"success":   true,
+		"data":      items,    // Direct data array, not nested
+		"page_info": pageInfo, // Pagination navigation info
+		"metadata":  metadata, // Pagination metadata (count, limit, etc.)
 	})
 }
 

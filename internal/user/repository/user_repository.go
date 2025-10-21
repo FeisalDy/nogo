@@ -2,7 +2,6 @@ package repository
 
 import (
 	commonModel "github.com/FeisalDy/nogo/internal/common/model"
-	roleModel "github.com/FeisalDy/nogo/internal/role/model"
 	"github.com/FeisalDy/nogo/internal/user/model"
 	"gorm.io/gorm"
 )
@@ -48,25 +47,10 @@ func (r *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 }
 
 // ===== Role-related methods =====
+// Note: These methods only deal with the user_roles junction table (common domain)
+// They work with role IDs only, not role entities (to maintain domain boundaries)
 
-// GetUserWithRoles gets a user and their roles
-func (r *UserRepository) GetUserWithRoles(userID uint) (*model.User, []roleModel.Role, error) {
-	var user model.User
-	if err := r.db.First(&user, userID).Error; err != nil {
-		return nil, nil, err
-	}
-
-	var roles []roleModel.Role
-	err := r.db.
-		Table("roles").
-		Joins("INNER JOIN user_roles ON user_roles.role_id = roles.id").
-		Where("user_roles.user_id = ? AND roles.deleted_at IS NULL", userID).
-		Find(&roles).Error
-
-	return &user, roles, err
-}
-
-// AssignRoleToUser assigns a role to a user
+// AssignRoleToUser assigns a role to a user by creating an entry in user_roles table
 func (r *UserRepository) AssignRoleToUser(userID, roleID uint) error {
 	userRole := commonModel.UserRole{
 		UserID: userID,
@@ -75,14 +59,14 @@ func (r *UserRepository) AssignRoleToUser(userID, roleID uint) error {
 	return r.db.Create(&userRole).Error
 }
 
-// RemoveRoleFromUser removes a role from a user
+// RemoveRoleFromUser removes a role from a user by deleting from user_roles table
 func (r *UserRepository) RemoveRoleFromUser(userID, roleID uint) error {
 	return r.db.
 		Where("user_id = ? AND role_id = ?", userID, roleID).
 		Delete(&commonModel.UserRole{}).Error
 }
 
-// GetUserRoleIDs gets all role IDs for a user
+// GetUserRoleIDs gets all role IDs for a user from user_roles table
 func (r *UserRepository) GetUserRoleIDs(userID uint) ([]uint, error) {
 	var roleIDs []uint
 	err := r.db.
@@ -92,34 +76,13 @@ func (r *UserRepository) GetUserRoleIDs(userID uint) ([]uint, error) {
 	return roleIDs, err
 }
 
-// HasRole checks if a user has a specific role
-func (r *UserRepository) HasRole(userID uint, roleName string) (bool, error) {
-	var count int64
-	err := r.db.
-		Table("user_roles").
-		Joins("INNER JOIN roles ON roles.id = user_roles.role_id").
-		Where("user_roles.user_id = ? AND roles.name = ? AND roles.deleted_at IS NULL", userID, roleName).
-		Count(&count).Error
-	return count > 0, err
-}
-
-// HasRoleByID checks if a user has a specific role by role ID
+// HasRoleByID checks if a user has a specific role by checking user_roles table
+// Only checks the junction table, doesn't access the roles table
 func (r *UserRepository) HasRoleByID(userID, roleID uint) (bool, error) {
 	var count int64
 	err := r.db.
 		Table("user_roles").
 		Where("user_id = ? AND role_id = ?", userID, roleID).
-		Count(&count).Error
-	return count > 0, err
-}
-
-// HasAnyRole checks if a user has any of the specified roles
-func (r *UserRepository) HasAnyRole(userID uint, roleNames []string) (bool, error) {
-	var count int64
-	err := r.db.
-		Table("user_roles").
-		Joins("INNER JOIN roles ON roles.id = user_roles.role_id").
-		Where("user_roles.user_id = ? AND roles.name IN ? AND roles.deleted_at IS NULL", userID, roleNames).
 		Count(&count).Error
 	return count > 0, err
 }

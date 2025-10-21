@@ -2,7 +2,8 @@ package router
 
 import (
 	"github.com/FeisalDy/nogo/config"
-	"github.com/FeisalDy/nogo/internal/common"
+	"github.com/FeisalDy/nogo/internal/application"
+	"github.com/FeisalDy/nogo/internal/novel"
 	"github.com/FeisalDy/nogo/internal/role"
 	"github.com/FeisalDy/nogo/internal/user"
 	"gorm.io/gorm"
@@ -13,9 +14,6 @@ import (
 func SetupRoutes(db *gorm.DB, cfg config.AppConfig) *gin.Engine {
 	r := gin.Default()
 
-	uploadService := common.GetUploadService(cfg.BaseURL)
-	r.Static("/uploads", uploadService.GetUploadDir())
-
 	v1 := r.Group("/api/v1")
 	{
 		v1.GET("/ping", func(c *gin.Context) {
@@ -24,27 +22,17 @@ func SetupRoutes(db *gorm.DB, cfg config.AppConfig) *gin.Engine {
 				"status":  "healthy",
 			})
 		})
+
+		application.RegisterRoutes(db, v1)
+
 		userRoutes := v1.Group("/users")
 		user.RegisterRoutes(db, userRoutes)
 
-		// Role routes
 		roleRoutes := v1.Group("/roles")
 		role.RegisterRoutes(db, roleRoutes)
 
-		// Upload routes
-		// uploadRoutes := v1.Group("/upload")
-		// common.RegisterUploadRoutes(uploadRoutes, cfg.BaseURL)
-
-		// Novel routes
-		// novelRoutes := v1.Group("/novels")
-		// novel.RegisterRoutes(novelRoutes)
-
-		// Add more domain routes here:
-		// authRoutes := v1.Group("/auth")
-		// auth.RegisterRoutes(authRoutes)
-
-		// authRoutes := v1.Group("/auth")
-		// auth.RegisterRoutes(authRoutes)
+		novelRoutes := v1.Group("/novels")
+		novel.RegisterRoutes(db, novelRoutes)
 	}
 
 	return r

@@ -96,6 +96,8 @@ const (
 	ErrCodeInternalServer = "GEN001"
 	ErrCodeBadRequest     = "GEN002"
 	ErrCodeNotFound       = "GEN003"
+
+	// File Error
 )
 
 var (
@@ -198,7 +200,7 @@ func FormatValidationError(err error, errorCode string) *AppError {
 	}
 
 	appError := NewAppError(errorCode, "Validation failed")
-	appError.Details = map[string]interface{}{
+	appError.Details = map[string]any{
 		"fields":  errors,
 		"summary": strings.Join(messages, "; "),
 	}

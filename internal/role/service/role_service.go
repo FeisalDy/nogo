@@ -5,18 +5,15 @@ import (
 	"github.com/FeisalDy/nogo/internal/role/dto"
 	"github.com/FeisalDy/nogo/internal/role/model"
 	"github.com/FeisalDy/nogo/internal/role/repository"
-	userRepo "github.com/FeisalDy/nogo/internal/user/repository"
 )
 
 type RoleService struct {
 	roleRepo *repository.RoleRepository
-	userRepo *userRepo.UserRepository
 }
 
-func NewRoleService(roleRepo *repository.RoleRepository, userRepo *userRepo.UserRepository) *RoleService {
+func NewRoleService(roleRepo *repository.RoleRepository) *RoleService {
 	return &RoleService{
 		roleRepo: roleRepo,
-		userRepo: userRepo,
 	}
 }
 
@@ -116,60 +113,4 @@ func (s *RoleService) DeleteRole(id uint) error {
 	}
 
 	return s.roleRepo.Delete(id)
-}
-
-func (s *RoleService) AssignRoleToUser(userID, roleID uint) error {
-	user, err := s.userRepo.GetUserByID(userID)
-	if err != nil {
-		return err
-	}
-	if user == nil {
-		return errors.ErrUserNotFound
-	}
-
-	role, err := s.roleRepo.GetByID(roleID)
-	if err != nil {
-		return err
-	}
-	if role == nil {
-		return errors.ErrRoleNotFound
-	}
-
-	hasRole, err := s.userRepo.HasRoleByID(userID, roleID)
-	if err != nil {
-		return err
-	}
-	if hasRole {
-		return errors.ErrUserAlreadyHasRole
-	}
-
-	return s.userRepo.AssignRoleToUser(userID, roleID)
-}
-
-func (s *RoleService) RemoveRoleFromUser(userID, roleID uint) error {
-	user, err := s.userRepo.GetUserByID(userID)
-	if err != nil {
-		return err
-	}
-	if user == nil {
-		return errors.ErrUserNotFound
-	}
-
-	role, err := s.roleRepo.GetByID(roleID)
-	if err != nil {
-		return err
-	}
-	if role == nil {
-		return errors.ErrRoleNotFound
-	}
-
-	hasRole, err := s.userRepo.HasRoleByID(userID, roleID)
-	if err != nil {
-		return err
-	}
-	if !hasRole {
-		return errors.ErrUserDoesNotHaveRole
-	}
-
-	return s.userRepo.RemoveRoleFromUser(userID, roleID)
 }
