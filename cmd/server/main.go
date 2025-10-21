@@ -24,8 +24,8 @@ func main() {
 	}
 	log.Println("Casbin initialized successfully")
 
-	// Auto-seed Casbin permissions (runs after Casbin is initialized)
-	database.SeedCasbin()
+	// Run all seeders (includes Casbin policies)
+	database.RunSeeds()
 
 	r := router.SetupRoutes(database.DB, cfg.App)
 
